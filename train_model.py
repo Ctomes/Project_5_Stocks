@@ -8,7 +8,12 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 import datetime
 import os
-
+import trends_regression
+import numpy as np
+def date_to_ints(df, col_name):
+    datetime_col = pd.to_datetime(df[col_name])
+    days_since_today = (datetime_col.dt.day)
+    return days_since_today
 def datetime_to_seconds(df, col_name):
     """
     Converts a datetime column in a Pandas DataFrame to the number of seconds since midnight.
@@ -24,9 +29,9 @@ def datetime_to_seconds(df, col_name):
 
     return seconds_since_midnight
 # Get the path to the data directory
-data_dir = './data/'
+data_dir = './data3/'
 
-# Get a list of all JSON files in the data directory
+# Get a list of all JSON files in the data directory 
 json_files = [f for f in os.listdir(data_dir) if f.endswith('.json')]
 
 conversion = []
@@ -36,11 +41,7 @@ total_conversion = 0.0
 for json_file in json_files:
     with open(data_dir + json_file, 'r') as f:
         data = json.load(f)
-        # Do something with the data
-# Load the JSON data from a file
-#with open('./data/AMZN.json', 'r') as f:
-#    data = json.load(f)
-#print(data)
+
 # Access the 'meta' and 'values' keys in the loaded JSON data
     meta_data = data['meta']
     values_data = data['values']
@@ -51,26 +52,51 @@ for json_file in json_files:
 
 # Convert datetime column to datetime type
     df['datetime'] = pd.to_datetime(df['datetime'])
+    #df['value']
+    stock = json_file.split('.')[0]
+    
+    stocktrends = trends_regression.predict_interest(keyword=stock, starttime='today 3-m')
+    print(stocktrends)
+    #print(stocktrends) # THIS IS ALL DATES AS KEYS
+
+    df['date'] = pd.to_datetime(df['datetime']).dt.date
+    for index, row in df.iterrows():
+        date = row['date']
+        date = pd.to_datetime(date)
+    # Check if the date exists in the data structure
+        if date in stocktrends:
+            df.at[index, 'value'] = stocktrends[date]
+    # Calculate the mean of the 'value' column
+    mean_value = df['value'].mean()
+
+    # Fill missing values in the 'value' column with the mean
+    df['value'].fillna(mean_value, inplace=True)
+
+
 
 # Convert all other columns to numeric type
     df[['open', 'high', 'low', 'close', 'volume', 'next_close']] = df[['open', 'high', 'low', 'close', 'volume', 'next_close']].apply(pd.to_numeric)
     df['time'] = df['datetime'].dt.time
-
+    
     df['time'] = datetime_to_seconds(df, 'datetime')
+    # Convert 'date' column to real numbers
+    df['date'] = date_to_ints(df, 'date')
     predicted_class= df.iloc[0]
     df.drop(df.head(1).index, inplace=True)
 
-    print(predicted_class)
+
+
+
 # Create a new dataframe with the closing prices and the next closing price
 # extract the time component
     #print(df)
-    X = df[['time','open','close','volume']]
+    X = df[['date','time','open','close','volume', 'value']]
     y = df['next_close']
     print('beginning LR')
     model = LinearRegression()
     model.fit(X, y)
 # Predict the next closing price based on the most recent closing price
-    last_close = last_close = [predicted_class['time'],predicted_class['open'], predicted_class['close'], predicted_class['volume']]
+    last_close = [predicted_class['date'],predicted_class['time'],predicted_class['open'], predicted_class['close'], predicted_class['volume'], predicted_class['value']]
 
 
 

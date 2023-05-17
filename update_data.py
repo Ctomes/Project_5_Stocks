@@ -18,7 +18,7 @@ def get_time_series(ticker_symbol, api, start_date, interval):
     if response.status_code == 200:
         data = response.json()
         filename = f"{ticker_symbol}.json"
-        filepath = os.path.join("data", filename)
+        filepath = os.path.join("data3", filename)
         with open(filepath, "w") as f:
             json.dump(data, f)
         print(f"JSON data saved to file {filepath}!")
@@ -29,7 +29,7 @@ def get_time_series(ticker_symbol, api, start_date, interval):
 
 api_key = read_api_key_file("api_key.txt")
 start_date = "04/01/2023 8:00 PM"
-interval = "4h"
+interval = "1day"
 tickers = {"AAPL","AMZN","GOOGL","MSFT","NFLX","TSLA","NVDA","INTC"}
 
 
