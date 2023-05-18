@@ -8,7 +8,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 import datetime
 import os
-import trends_regression
+import update_trends_data
 import numpy as np
 def date_to_ints(df, col_name):
     datetime_col = pd.to_datetime(df[col_name])
@@ -55,17 +55,47 @@ for json_file in json_files:
     #df['value']
     stock = json_file.split('.')[0]
     
-    stocktrends = trends_regression.predict_interest(keyword=stock, starttime='today 3-m')
-    print(stocktrends)
-    #print(stocktrends) # THIS IS ALL DATES AS KEYS
+    stocktrends = update_trends_data.predict_interest(keyword=stock, starttime='today 3-m')
+
+    filename = (f"{stock}.csv")
+    filepath = os.path.join("data_twitter", filename)
+    twitter = pd.read_csv(filepath)
+    
+    twitter['date'] = pd.to_datetime(twitter['date']).dt.date
+
 
     df['date'] = pd.to_datetime(df['datetime']).dt.date
+
+    length = len(df)
+    df['like_count'] = np.zeros(length)
+    df['view_count'] = np.zeros(length)
+    df['engagement'] = np.zeros(length)
     for index, row in df.iterrows():
         date = row['date']
+        tempval = 0
+        for t_index, t_row in twitter.iterrows():
+            t_date = t_row['date']
+            if date == t_date:
+                df.at[index, 'like_count'] = t_row['Like Count']
+                df.at[index, 'view_count'] = t_row['View Count']
+                df.at[index, 'engagement'] = t_row['Engagement Score']
+                tempval = 1
+                print('yes',date)
+        """        
+        if date in twitter['date']:
+            df.at[index, 'like_count'] = twitter['like_count']
+            print('yes',date)
+        else:
+            print('no',date)
+            df.at[index, 'like_count'] = 0
+        """
         date = pd.to_datetime(date)
+        
     # Check if the date exists in the data structure
         if date in stocktrends:
             df.at[index, 'value'] = stocktrends[date]
+       
+
     # Calculate the mean of the 'value' column
     mean_value = df['value'].mean()
 
@@ -90,13 +120,14 @@ for json_file in json_files:
 # Create a new dataframe with the closing prices and the next closing price
 # extract the time component
     #print(df)
-    X = df[['date','time','open','close','volume', 'value']]
+    X = df[['date','time','open','close','volume', 'value', 'like_count', 'view_count', 'engagement']]
+    print(X)
     y = df['next_close']
     print('beginning LR')
     model = LinearRegression()
     model.fit(X, y)
 # Predict the next closing price based on the most recent closing price
-    last_close = [predicted_class['date'],predicted_class['time'],predicted_class['open'], predicted_class['close'], predicted_class['volume'], predicted_class['value']]
+    last_close = [predicted_class['date'],predicted_class['time'],predicted_class['open'], predicted_class['close'], predicted_class['volume'], predicted_class['value'],predicted_class['like_count'], predicted_class['view_count'],predicted_class['engagement']]
 
 
 
@@ -107,6 +138,7 @@ for json_file in json_files:
     total_conversion= total_conversion + (next_close[0]/last_close[2])
     conversion.append([meta_data['symbol'], (next_close[0]/last_close[2]), last_close[2]])
     print('Printtest',last_close)
+    
 total_conversion=0
 print(total_conversion)
 for conv in conversion:
