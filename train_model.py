@@ -46,7 +46,7 @@ for json_file in json_files:
     meta_data = data['meta']
     values_data = data['values']
 # Convert the data to a Pandas DataFrame
-    print(meta_data)
+    #print(meta_data)
     df = pd.DataFrame(values_data)
     df['next_close'] = df['close'].shift(+1)
 
@@ -81,14 +81,7 @@ for json_file in json_files:
                 df.at[index, 'engagement'] = t_row['Engagement Score']
                 tempval = 1
                 print('yes',date)
-        """        
-        if date in twitter['date']:
-            df.at[index, 'like_count'] = twitter['like_count']
-            print('yes',date)
-        else:
-            print('no',date)
-            df.at[index, 'like_count'] = 0
-        """
+
         date = pd.to_datetime(date)
         
     # Check if the date exists in the data structure
@@ -111,26 +104,48 @@ for json_file in json_files:
     df['time'] = datetime_to_seconds(df, 'datetime')
     # Convert 'date' column to real numbers
     df['date'] = date_to_ints(df, 'date')
+
+
+
+
+    print('Beginning Correlation Dependencies:')
+    #This code now adds a correlation component relating each other potential Stock to the current stock. These companies are related and there should be treated as such. 
+    #Area of improvement is grabbing the pretrained datasets and then combining at the end instead of doing it here. Then we can grab values like trends and engagement.
+    for other_json in json_files:
+        if other_json == json_file:
+            print('Skipping: ',other_json)
+            continue
+        print('Beginning: ',other_json)
+        with open(data_dir + other_json, 'r') as f:
+            other_json_data = json.load(f)
+            other_vals = pd.DataFrame(other_json_data['values'])
+            df[other_json.split('.')[0] + '_open'] = other_vals['open'].apply(pd.to_numeric)
+            df[other_json + '_close'] = other_vals['close'].apply(pd.to_numeric)
+            
+            df[other_json.split('.')[0] + 'volume'] = other_vals['volume'].apply(pd.to_numeric)
+
+    
+
     predicted_class= df.iloc[0]
     df.drop(df.head(1).index, inplace=True)
 
-
-
-
 # Create a new dataframe with the closing prices and the next closing price
 # extract the time component
-    #print(df)
-    X = df[['date','time','open','close','volume', 'value', 'like_count', 'view_count', 'engagement']]
-    print(X)
+    columns_to_drop = ['next_close', 'datetime'] # no need for datetime since we have date component. 
+
     y = df['next_close']
-    print('beginning LR')
+    X = df.drop(columns_to_drop, axis=1)
+
+
+    print('Beginning LR')
     model = LinearRegression()
     model.fit(X, y)
+
 # Predict the next closing price based on the most recent closing price
-    last_close = [predicted_class['date'],predicted_class['time'],predicted_class['open'], predicted_class['close'], predicted_class['volume'], predicted_class['value'],predicted_class['like_count'], predicted_class['view_count'],predicted_class['engagement']]
+    #last_close = [predicted_class['date'],predicted_class['time'],predicted_class['open'], predicted_class['close'], predicted_class['volume'], predicted_class['value'],predicted_class['like_count'], predicted_class['view_count'],predicted_class['engagement']]
 
-
-
+    #predicted_class= df.iloc[0]
+    last_close = predicted_class.drop(columns_to_drop)
     next_close = model.predict([last_close])
     print('Predicted next closing price:',next_close[0] )
     print('Current price:',last_close[2] )

@@ -29,7 +29,7 @@ def get_time_series(ticker_symbol, api, start_date, interval):
 
 api_key = read_api_key_file("api_key.txt")
 start_date = "04/01/2023 8:00 PM"
-interval = "4h"
+interval = "1day"
 tickers = {"AAPL","AMZN","GOOGL","MSFT","NFLX","TSLA","NVDA","INTC"}
 
 
