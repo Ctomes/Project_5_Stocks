@@ -29,7 +29,7 @@ def datetime_to_seconds(df, col_name):
 
     return seconds_since_midnight
 # Get the path to the data directory
-data_dir = './data3/'
+data_dir = './data4/'
 
 # Get a list of all JSON files in the data directory 
 json_files = [f for f in os.listdir(data_dir) if f.endswith('.json')]
@@ -58,7 +58,7 @@ for json_file in json_files:
     stocktrends = update_trends_data.predict_interest(keyword=stock, starttime='today 3-m')
 
     filename = (f"{stock}.csv")
-    filepath = os.path.join("data_twitter", filename)
+    filepath = os.path.join("data_twitter2", filename)
     twitter = pd.read_csv(filepath)
     
     twitter['date'] = pd.to_datetime(twitter['date']).dt.date

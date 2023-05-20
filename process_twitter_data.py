@@ -36,7 +36,7 @@ for value, split_df in dfs.items():
     print(f"DataFrame for {value}:")
     print(split_df)
     filename = (f"{value}.csv")
-    filepath = os.path.join("data_twitter", filename)
+    filepath = os.path.join("data_twitter2", filename)
     split_df.to_csv(filepath)
     print()
 

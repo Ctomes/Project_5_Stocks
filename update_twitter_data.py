@@ -22,5 +22,5 @@ for stock in stocks:
 # Creating a dataframe from the tweets list above 
 tweets_df1 = pd.DataFrame(tweets_list1, columns=['STOCK', 'Datetime', 'Tweet Id', 'Text', 'Reply Count', 'Like Count', 'Quote Count', 'View Count', 'Vibe', 'Retweet Count', "Conversation Id"])
 
-filename = "tweets.csv"
+filename = "tweets2.csv"
 tweets_df1.to_csv(filename)
