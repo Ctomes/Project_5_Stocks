@@ -1,5 +1,5 @@
 ### Tomes, Christopher
-### CS4650 Big Data and Cloud COmputing
+### CS4650 Big Data and Cloud Computing
 ### Cal Poly Pomona
 
 ### Github: https://github.com/Ctomes/Project_5_Stocks
